@@ -12,7 +12,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -52,7 +51,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.binary.name }}
+          images: ${{ env.REGISTRY }}/metorial/node-manager-${{ matrix.binary.name }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
