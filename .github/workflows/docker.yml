@@ -23,7 +23,7 @@ jobs:
       matrix:
         binary:
           - name: collector
-            dockerfile: Dockerfile
+            dockerfile: Dockerfile.collector
             description: "Node Metrics Collector - API server for collecting and querying host metrics"
           - name: outpost
             dockerfile: Dockerfile.outpost
