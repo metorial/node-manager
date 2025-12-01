@@ -53,12 +53,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/metorial/node-manager-${{ matrix.binary.name }}
           tags: |
-            type=ref,event=branch
+            type=ref,event=branch,suffix=-{{sha}}
             type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
           labels: |
             org.opencontainers.image.title=${{ matrix.binary.name }}
             org.opencontainers.image.description=${{ matrix.binary.description }}
