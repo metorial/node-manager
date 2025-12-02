@@ -10,13 +10,13 @@ proto:
 build: build-collector build-outpost build-cli
 
 build-collector:
-	CGO_ENABLED=1 go build -o bin/collector ./cmd/collector
+	CGO_ENABLED=0 go build -o bin/collector ./cmd/collector
 
 build-outpost:
-	CGO_ENABLED=1 go build -o bin/outpost ./cmd/outpost
+	CGO_ENABLED=0 go build -o bin/outpost ./cmd/outpost
 
 build-cli:
-	go build -o bin/nodectl ./cmd/nodectl
+	CGO_ENABLED=0 go build -o bin/nodectl ./cmd/nodectl
 
 docker:
 	docker build -t node-metrics-collector:latest .
@@ -34,13 +34,13 @@ install-cli: build-cli
 test: test-unit test-integration
 
 test-unit:
-	CGO_ENABLED=1 go test -v -short ./internal/...
+	CGO_ENABLED=0 go test -v -short ./internal/...
 
 test-integration:
-	CGO_ENABLED=1 go test -v ./test/integration/...
+	CGO_ENABLED=0 go test -v ./test/integration/...
 
 test-coverage:
-	CGO_ENABLED=1 go test -coverprofile=coverage.out ./...
+	CGO_ENABLED=0 go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 
 clean:
