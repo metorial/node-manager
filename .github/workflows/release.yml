@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc musl-dev sqlite3 libsqlite3-dev protobuf-compiler
+          sudo apt-get install -y protobuf-compiler
 
       - name: Run tests
         run: make test-unit
@@ -53,26 +53,32 @@ jobs:
 
             echo "Building for $GOOS/$GOARCH..."
 
-            # Collector (needs CGO for SQLite)
-            if [ "$GOOS" = "linux" ]; then
-              output="dist/collector-$GOOS-$GOARCH"
-              [ "$GOOS" = "windows" ] && output+=".exe"
-              CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o "$output" ./cmd/collector
+            # Collector (pure Go SQLite - no CGO needed)
+            output="dist/collector-$GOOS-$GOARCH"
+            [ "$GOOS" = "windows" ] && output+=".exe"
+            CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -o "$output" ./cmd/collector
+
+            if [ "$GOOS" = "windows" ]; then
+              zip -j "dist/collector-$GOOS-$GOARCH.zip" "$output"
+            else
               tar czf "dist/collector-$GOOS-$GOARCH.tar.gz" -C dist "collector-$GOOS-$GOARCH"
             fi
 
-            # Outpost (needs CGO for SQLite)
-            if [ "$GOOS" = "linux" ]; then
-              output="dist/outpost-$GOOS-$GOARCH"
-              [ "$GOOS" = "windows" ] && output+=".exe"
-              CGO_ENABLED=1 GOOS=$GOOS GOARCH=$GOARCH go build -o "$output" ./cmd/outpost
+            # Outpost (pure Go SQLite - no CGO needed)
+            output="dist/outpost-$GOOS-$GOARCH"
+            [ "$GOOS" = "windows" ] && output+=".exe"
+            CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -o "$output" ./cmd/outpost
+
+            if [ "$GOOS" = "windows" ]; then
+              zip -j "dist/outpost-$GOOS-$GOARCH.zip" "$output"
+            else
               tar czf "dist/outpost-$GOOS-$GOARCH.tar.gz" -C dist "outpost-$GOOS-$GOARCH"
             fi
 
             # CLI (no CGO needed)
             output="dist/nodectl-$GOOS-$GOARCH"
             [ "$GOOS" = "windows" ] && output+=".exe"
-            GOOS=$GOOS GOARCH=$GOARCH go build -o "$output" ./cmd/nodectl
+            CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build -o "$output" ./cmd/nodectl
 
             if [ "$GOOS" = "windows" ]; then
               zip -j "dist/nodectl-$GOOS-$GOARCH.zip" "$output"
