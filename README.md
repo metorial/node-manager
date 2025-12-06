@@ -116,29 +116,20 @@ The Command Core integrates with Consul for automatic service discovery and heal
 
 ```mermaid
 graph TB
-  Consul[<Consul Service Registry]
-  Commander[Commander Server<br/>gRPC + HTTP API]
-  Outpost1[Outpost Agent<br/>Node 1]
-  Outpost2[Outpost Agent<br/>Node 2]
-  Outpost3[Outpost Agent<br/>Node N]
+  Consul[Consul<br/>Service Registry]
+  Commander[Commander Server<br/>gRPC + HTTP]
+  Outposts[Outpost Agents<br/>Nodes 1..N]
   CLI[nodectl CLI]
-  DB[(SQLite Database)]
+  DB[(SQLite DB)]
 
-  Commander -->|Service Registration| Consul
-  Consul -->|Service Discovery| Outpost1
-  Consul -->|Service Discovery| Outpost2
-  Consul -->|Service Discovery| Outpost3
+  Commander --> Consul
+  Consul --> Outposts
 
-  Outpost1 -->|gRPC Stream<br/>Metrics & Script Results| Commander
-  Outpost2 -->|gRPC Stream<br/>Metrics & Script Results| Commander
-  Outpost3 -->|gRPC Stream<br/>Metrics & Script Results| Commander
+  Outposts -->|gRPC Stream| Commander
+  Commander -->|Script Commands| Outposts
 
-  Commander -->|Script Commands| Outpost1
-  Commander -->|Script Commands| Outpost2
-  Commander -->|Script Commands| Outpost3
-
-  Commander <-->|Read/Write| DB
-  CLI -->|HTTP REST API<br/>Queries & Commands| Commander
+  Commander <-->|R/W| DB
+  CLI -->|REST API| Commander
 
   style Commander fill:#4a9eff,stroke:#333,stroke-width:2px,color:#fff
   style Consul fill:#ca2171,stroke:#333,stroke-width:2px,color:#fff
