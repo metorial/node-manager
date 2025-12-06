@@ -36,9 +36,9 @@ bin/
 *.db
 *.db-journal
 
-collector
-outpost
-nodectl
+/collector
+/outpost
+/nodectl
 
 # Prevent proto files from being generated outside proto/
 github.com/
