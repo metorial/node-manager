@@ -1,4 +1,4 @@
-module github.com/metorial/command-core
+module github.com/metorial/sentinel
 
 go 1.25.3
 

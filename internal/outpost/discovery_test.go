@@ -10,7 +10,7 @@ import (
 
 func TestDiscoverCommander(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/health/service/command-core-commander" {
+		if r.URL.Path != "/v1/health/service/sentinel-controller" {
 			t.Errorf("Unexpected path: %s", r.URL.Path)
 			w.WriteHeader(http.StatusNotFound)
 			return

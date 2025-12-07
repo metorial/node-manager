@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/metorial/command-core/internal/commander"
-	"github.com/metorial/command-core/internal/outpost"
-	pb "github.com/metorial/command-core/proto"
+	"github.com/metorial/sentinel/internal/commander"
+	"github.com/metorial/sentinel/internal/outpost"
+	pb "github.com/metorial/sentinel/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

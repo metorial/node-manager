@@ -29,7 +29,7 @@ func NewServiceDiscovery(consulAddr string) (*ServiceDiscovery, error) {
 }
 
 func (sd *ServiceDiscovery) DiscoverCommander() (string, error) {
-	services, _, err := sd.client.Health().Service("command-core-commander", "", true, nil)
+	services, _, err := sd.client.Health().Service("sentinel-controller", "", true, nil)
 	if err != nil {
 		return "", fmt.Errorf("query consul: %w", err)
 	}

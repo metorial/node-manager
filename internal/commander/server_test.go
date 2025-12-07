@@ -7,7 +7,7 @@ import (
 
 	"net"
 
-	pb "github.com/metorial/command-core/proto"
+	pb "github.com/metorial/sentinel/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"

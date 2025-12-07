@@ -22,15 +22,15 @@ jobs:
     strategy:
       matrix:
         binary:
-          - name: commander
-            dockerfile: Dockerfile.commander
-            description: "Command Core Commander - API server for collecting and querying host metrics"
+          - name: controller
+            dockerfile: Dockerfile.controller
+            description: "Sentinel Controller - API server for collecting and querying host metrics"
           - name: outpost
             dockerfile: Dockerfile.outpost
-            description: "Command Core Outpost - Agent for collecting system metrics"
+            description: "Sentinel Outpost - Agent for collecting system metrics"
           - name: nodectl
             dockerfile: Dockerfile.nodectl
-            description: "Command Core CLI - Command-line interface for the commander"
+            description: "Sentinel CLI - Command-line interface for the controller"
 
     steps:
       - name: Checkout code
@@ -51,7 +51,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/metorial/command-core-${{ matrix.binary.name }}
+          images: ${{ env.REGISTRY }}/metorial/sentinel-${{ matrix.binary.name }}
           tags: |
             type=ref,event=branch,suffix=-{{sha}}
             type=ref,event=pr

@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/metorial/command-core/internal/models"
+	"github.com/metorial/sentinel/internal/models"
 )
 
 type API struct {

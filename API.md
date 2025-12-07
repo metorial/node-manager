@@ -184,7 +184,7 @@ Create a new script and distribute it to hosts. Scripts are sent to all online h
 - Scripts are distributed immediately to matching online hosts via the gRPC stream
 - Each host tracks executed scripts by SHA256 hash and only runs each unique script once
 - Execution happens asynchronously on outpost agents
-- Results (exit code, stdout, stderr) are reported back to the commander
+- Results (exit code, stdout, stderr) are reported back to the controller
 
 **Response** `201 Created`
 ```json
@@ -356,9 +356,9 @@ Internal server error
 
 ## Service Discovery
 
-The HTTP API is automatically registered with Consul under the name `command-core-commander-http`.
+The HTTP API is automatically registered with Consul under the name `sentinel-controller-http`.
 
 **Query Consul**
 ```bash
-curl http://consul:8500/v1/catalog/service/command-core-commander-http
+curl http://consul:8500/v1/catalog/service/sentinel-controller-http
 ```
