@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/metorial/command-core/internal/models"
+	"github.com/metorial/sentinel/internal/models"
 	_ "modernc.org/sqlite"
 )
 

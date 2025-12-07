@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/metorial/command-core/internal/outpost"
+	"github.com/metorial/sentinel/internal/outpost"
 )
 
 const (

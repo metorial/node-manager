@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	pb "github.com/metorial/command-core/proto"
+	pb "github.com/metorial/sentinel/proto"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"

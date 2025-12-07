@@ -1,8 +1,8 @@
-job "commander" {
+job "controller" {
   datacenters = ["dc1"]
   type        = "service"
 
-  group "commander" {
+  group "controller" {
     count = 1
 
     network {
@@ -16,22 +16,22 @@ job "commander" {
       }
     }
 
-    volume "commander-data" {
+    volume "controller-data" {
       type      = "host"
-      source    = "commander-data"
+      source    = "controller-data"
       read_only = false
     }
 
-    task "commander" {
+    task "controller" {
       driver = "docker"
 
       config {
-        image = "ghcr.io/metorial/command-core-commander:latest"
+        image = "ghcr.io/metorial/sentinel-controller:latest"
         ports = ["grpc", "http"]
       }
 
       volume_mount {
-        volume      = "commander-data"
+        volume      = "controller-data"
         destination = "/data"
         read_only   = false
       }
@@ -55,7 +55,7 @@ EOF
       }
 
       service {
-        name = "command-core-commander"
+        name = "sentinel-controller"
         port = "grpc"
         tags = ["grpc", "metrics"]
 
@@ -68,7 +68,7 @@ EOF
       }
 
       service {
-        name = "command-core-commander-http"
+        name = "sentinel-controller-http"
         port = "http"
         tags = ["http", "api"]
 

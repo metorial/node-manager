@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/metorial/command-core/internal/commander"
-	"github.com/metorial/command-core/internal/outpost"
-	pb "github.com/metorial/command-core/proto"
+	"github.com/metorial/sentinel/internal/commander"
+	"github.com/metorial/sentinel/internal/outpost"
+	pb "github.com/metorial/sentinel/proto"
 	"google.golang.org/grpc"
 )
 
@@ -55,7 +55,7 @@ func TestEndToEndWithConsul(t *testing.T) {
 	}
 
 	consulServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/v1/health/service/command-core-commander" {
+		if r.URL.Path == "/v1/health/service/sentinel-controller" {
 			response := []map[string]interface{}{
 				{
 					"Node": map[string]interface{}{

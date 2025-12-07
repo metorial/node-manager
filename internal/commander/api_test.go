@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/metorial/command-core/internal/models"
+	"github.com/metorial/sentinel/internal/models"
 )
 
 func TestHandleHealth(t *testing.T) {

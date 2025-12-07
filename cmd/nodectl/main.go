@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/metorial/command-core/internal/cli"
+	"github.com/metorial/sentinel/internal/cli"
 	"github.com/spf13/cobra"
 )
 

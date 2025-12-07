@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/metorial/command-core/internal/models"
+	"github.com/metorial/sentinel/internal/models"
 )
 
 func TestNewDB(t *testing.T) {

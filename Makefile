@@ -7,10 +7,10 @@ proto:
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		proto/metrics.proto
 
-build: build-commander build-outpost build-cli
+build: build-controller build-outpost build-cli
 
-build-commander:
-	CGO_ENABLED=0 go build -o bin/commander ./cmd/commander
+build-controller:
+	CGO_ENABLED=0 go build -o bin/controller ./cmd/commander
 
 build-outpost:
 	CGO_ENABLED=0 go build -o bin/outpost ./cmd/outpost
@@ -19,7 +19,7 @@ build-cli:
 	CGO_ENABLED=0 go build -o bin/nodectl ./cmd/nodectl
 
 docker:
-	docker build -t command-core-commander:latest -f Dockerfile.commander .
+	docker build -t sentinel-controller:latest -f Dockerfile.controller .
 
 install-outpost: build-outpost
 	sudo cp bin/outpost /usr/local/bin/node-outpost

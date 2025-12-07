@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/metorial/command-core/internal/models"
-	pb "github.com/metorial/command-core/proto"
+	"github.com/metorial/sentinel/internal/models"
+	pb "github.com/metorial/sentinel/proto"
 )
 
 type Server struct {

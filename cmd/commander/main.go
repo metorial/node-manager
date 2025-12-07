@@ -12,8 +12,8 @@ import (
 	"time"
 
 	consul "github.com/hashicorp/consul/api"
-	"github.com/metorial/command-core/internal/commander"
-	pb "github.com/metorial/command-core/proto"
+	"github.com/metorial/sentinel/internal/commander"
+	pb "github.com/metorial/sentinel/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -143,8 +143,8 @@ func registerConsul(port, httpPort string) error {
 	}
 
 	registration := &consul.AgentServiceRegistration{
-		ID:      "command-core-commander",
-		Name:    "command-core-commander",
+		ID:      "sentinel-controller",
+		Name:    "sentinel-controller",
 		Port:    mustAtoi(port),
 		Address: nodeIP,
 		Check: &consul.AgentServiceCheck{
@@ -161,8 +161,8 @@ func registerConsul(port, httpPort string) error {
 	}
 
 	httpRegistration := &consul.AgentServiceRegistration{
-		ID:      "command-core-commander-http",
-		Name:    "command-core-commander-http",
+		ID:      "sentinel-controller-http",
+		Name:    "sentinel-controller-http",
 		Port:    mustAtoi(httpPort),
 		Address: nodeIP,
 		Check: &consul.AgentServiceCheck{
@@ -191,11 +191,11 @@ func deregisterConsul() {
 		return
 	}
 
-	if err := client.Agent().ServiceDeregister("command-core-commander"); err != nil {
+	if err := client.Agent().ServiceDeregister("sentinel-controller"); err != nil {
 		log.Printf("Error deregistering gRPC service: %v", err)
 	}
 
-	if err := client.Agent().ServiceDeregister("command-core-commander-http"); err != nil {
+	if err := client.Agent().ServiceDeregister("sentinel-controller-http"); err != nil {
 		log.Printf("Error deregistering HTTP service: %v", err)
 	}
 }
