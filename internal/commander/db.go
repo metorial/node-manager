@@ -79,34 +79,6 @@ func (db *DB) migrate() error {
 		FOREIGN KEY (host_id) REFERENCES hosts(id) ON DELETE CASCADE,
 		FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 	);
-
-	CREATE TABLE IF NOT EXISTS scripts (
-		id TEXT PRIMARY KEY,
-		name TEXT NOT NULL,
-		content TEXT NOT NULL,
-		sha256_hash TEXT NOT NULL UNIQUE,
-		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-	);
-
-	CREATE INDEX IF NOT EXISTS idx_scripts_sha256 ON scripts(sha256_hash);
-	CREATE INDEX IF NOT EXISTS idx_scripts_name ON scripts(name);
-
-	CREATE TABLE IF NOT EXISTS script_executions (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		script_id TEXT NOT NULL,
-		host_id INTEGER NOT NULL,
-		sha256_hash TEXT NOT NULL,
-		exit_code INTEGER NOT NULL,
-		stdout TEXT,
-		stderr TEXT,
-		executed_at TIMESTAMP NOT NULL,
-		FOREIGN KEY (script_id) REFERENCES scripts(id) ON DELETE CASCADE,
-		FOREIGN KEY (host_id) REFERENCES hosts(id) ON DELETE CASCADE
-	);
-
-	CREATE INDEX IF NOT EXISTS idx_script_executions_script_id ON script_executions(script_id);
-	CREATE INDEX IF NOT EXISTS idx_script_executions_host_id ON script_executions(host_id);
-	CREATE INDEX IF NOT EXISTS idx_script_executions_hash_host ON script_executions(sha256_hash, host_id);
 	`
 
 	_, err := db.conn.Exec(schema)
@@ -308,94 +280,6 @@ func (db *DB) GetClusterStats() (map[string]interface{}, error) {
 	}
 
 	return stats, nil
-}
-
-// CreateScript creates a new script
-func (db *DB) CreateScript(script *models.Script) error {
-	query := `INSERT INTO scripts (id, name, content, sha256_hash, created_at)
-	          VALUES (?, ?, ?, ?, ?)`
-	_, err := db.conn.Exec(query, script.ID, script.Name, script.Content, script.SHA256Hash, script.CreatedAt)
-	return err
-}
-
-// GetScript retrieves a script by ID
-func (db *DB) GetScript(id string) (*models.Script, error) {
-	query := `SELECT id, name, content, sha256_hash, created_at FROM scripts WHERE id = ?`
-	var s models.Script
-	err := db.conn.QueryRow(query, id).Scan(&s.ID, &s.Name, &s.Content, &s.SHA256Hash, &s.CreatedAt)
-	if err != nil {
-		return nil, err
-	}
-	return &s, nil
-}
-
-// GetAllScripts retrieves all scripts
-func (db *DB) GetAllScripts() ([]models.Script, error) {
-	query := `SELECT id, name, content, sha256_hash, created_at FROM scripts ORDER BY created_at DESC`
-	rows, err := db.conn.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var scripts []models.Script
-	for rows.Next() {
-		var s models.Script
-		if err := rows.Scan(&s.ID, &s.Name, &s.Content, &s.SHA256Hash, &s.CreatedAt); err != nil {
-			return nil, err
-		}
-		scripts = append(scripts, s)
-	}
-	return scripts, rows.Err()
-}
-
-// DeleteScript deletes a script by ID
-func (db *DB) DeleteScript(id string) error {
-	query := `DELETE FROM scripts WHERE id = ?`
-	_, err := db.conn.Exec(query, id)
-	return err
-}
-
-// RecordScriptExecution records the result of a script execution
-func (db *DB) RecordScriptExecution(exec *models.ScriptExecution) error {
-	query := `INSERT INTO script_executions (script_id, host_id, sha256_hash, exit_code, stdout, stderr, executed_at)
-	          VALUES (?, ?, ?, ?, ?, ?, ?)`
-	_, err := db.conn.Exec(query, exec.ScriptID, exec.HostID, exec.SHA256Hash, exec.ExitCode, exec.Stdout, exec.Stderr, exec.ExecutedAt)
-	return err
-}
-
-// GetScriptExecutions retrieves executions for a script
-func (db *DB) GetScriptExecutions(scriptID string) ([]models.ScriptExecution, error) {
-	query := `SELECT se.id, se.script_id, se.host_id, h.hostname, se.sha256_hash, se.exit_code, se.stdout, se.stderr, se.executed_at
-	          FROM script_executions se
-	          JOIN hosts h ON se.host_id = h.id
-	          WHERE se.script_id = ?
-	          ORDER BY se.executed_at DESC`
-	rows, err := db.conn.Query(query, scriptID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var execs []models.ScriptExecution
-	for rows.Next() {
-		var e models.ScriptExecution
-		if err := rows.Scan(&e.ID, &e.ScriptID, &e.HostID, &e.Hostname, &e.SHA256Hash, &e.ExitCode, &e.Stdout, &e.Stderr, &e.ExecutedAt); err != nil {
-			return nil, err
-		}
-		execs = append(execs, e)
-	}
-	return execs, rows.Err()
-}
-
-// HasScriptExecuted checks if a script with given hash has been executed on a host
-func (db *DB) HasScriptExecuted(hostname, sha256Hash string) (bool, error) {
-	query := `SELECT COUNT(*) FROM script_executions se
-	          JOIN hosts h ON se.host_id = h.id
-	          WHERE h.hostname = ? AND se.sha256_hash = ?`
-	var count int
-	err := db.conn.QueryRow(query, hostname, sha256Hash).Scan(&count)
-	return count > 0, err
 }
 
 // CreateTag creates a new tag

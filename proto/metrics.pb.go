@@ -283,7 +283,6 @@ type AgentMessage struct {
 	// Types that are valid to be assigned to Payload:
 	//
 	//	*AgentMessage_Metrics
-	//	*AgentMessage_ScriptResult
 	Payload       isAgentMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -335,15 +334,6 @@ func (x *AgentMessage) GetMetrics() *HostMetrics {
 	return nil
 }
 
-func (x *AgentMessage) GetScriptResult() *ScriptResult {
-	if x != nil {
-		if x, ok := x.Payload.(*AgentMessage_ScriptResult); ok {
-			return x.ScriptResult
-		}
-	}
-	return nil
-}
-
 type isAgentMessage_Payload interface {
 	isAgentMessage_Payload()
 }
@@ -352,13 +342,7 @@ type AgentMessage_Metrics struct {
 	Metrics *HostMetrics `protobuf:"bytes,1,opt,name=metrics,proto3,oneof"`
 }
 
-type AgentMessage_ScriptResult struct {
-	ScriptResult *ScriptResult `protobuf:"bytes,2,opt,name=script_result,json=scriptResult,proto3,oneof"`
-}
-
 func (*AgentMessage_Metrics) isAgentMessage_Payload() {}
-
-func (*AgentMessage_ScriptResult) isAgentMessage_Payload() {}
 
 // Wrapper for messages from collector to agent
 type CollectorMessage struct {
@@ -366,7 +350,6 @@ type CollectorMessage struct {
 	// Types that are valid to be assigned to Payload:
 	//
 	//	*CollectorMessage_Ack
-	//	*CollectorMessage_ScriptCommand
 	Payload       isCollectorMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -418,15 +401,6 @@ func (x *CollectorMessage) GetAck() *Acknowledgment {
 	return nil
 }
 
-func (x *CollectorMessage) GetScriptCommand() *ScriptCommand {
-	if x != nil {
-		if x, ok := x.Payload.(*CollectorMessage_ScriptCommand); ok {
-			return x.ScriptCommand
-		}
-	}
-	return nil
-}
-
 type isCollectorMessage_Payload interface {
 	isCollectorMessage_Payload()
 }
@@ -435,159 +409,7 @@ type CollectorMessage_Ack struct {
 	Ack *Acknowledgment `protobuf:"bytes,1,opt,name=ack,proto3,oneof"`
 }
 
-type CollectorMessage_ScriptCommand struct {
-	ScriptCommand *ScriptCommand `protobuf:"bytes,2,opt,name=script_command,json=scriptCommand,proto3,oneof"`
-}
-
 func (*CollectorMessage_Ack) isCollectorMessage_Payload() {}
-
-func (*CollectorMessage_ScriptCommand) isCollectorMessage_Payload() {}
-
-// Script to be executed on agent
-type ScriptCommand struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ScriptId      string                 `protobuf:"bytes,1,opt,name=script_id,json=scriptId,proto3" json:"script_id,omitempty"`       // Unique identifier for the script
-	Content       string                 `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`                         // Script content (bash/shell script)
-	Sha256Hash    string                 `protobuf:"bytes,3,opt,name=sha256_hash,json=sha256Hash,proto3" json:"sha256_hash,omitempty"` // Hash for deduplication and verification
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ScriptCommand) Reset() {
-	*x = ScriptCommand{}
-	mi := &file_proto_metrics_proto_msgTypes[6]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ScriptCommand) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ScriptCommand) ProtoMessage() {}
-
-func (x *ScriptCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_metrics_proto_msgTypes[6]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ScriptCommand.ProtoReflect.Descriptor instead.
-func (*ScriptCommand) Descriptor() ([]byte, []int) {
-	return file_proto_metrics_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *ScriptCommand) GetScriptId() string {
-	if x != nil {
-		return x.ScriptId
-	}
-	return ""
-}
-
-func (x *ScriptCommand) GetContent() string {
-	if x != nil {
-		return x.Content
-	}
-	return ""
-}
-
-func (x *ScriptCommand) GetSha256Hash() string {
-	if x != nil {
-		return x.Sha256Hash
-	}
-	return ""
-}
-
-// Result of script execution
-type ScriptResult struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	ScriptId      string                 `protobuf:"bytes,1,opt,name=script_id,json=scriptId,proto3" json:"script_id,omitempty"`        // ID of the executed script
-	Sha256Hash    string                 `protobuf:"bytes,2,opt,name=sha256_hash,json=sha256Hash,proto3" json:"sha256_hash,omitempty"`  // Hash of the executed script
-	ExitCode      int32                  `protobuf:"varint,3,opt,name=exit_code,json=exitCode,proto3" json:"exit_code,omitempty"`       // Exit code from script execution
-	Stdout        string                 `protobuf:"bytes,4,opt,name=stdout,proto3" json:"stdout,omitempty"`                            // Standard output
-	Stderr        string                 `protobuf:"bytes,5,opt,name=stderr,proto3" json:"stderr,omitempty"`                            // Standard error
-	ExecutedAt    int64                  `protobuf:"varint,6,opt,name=executed_at,json=executedAt,proto3" json:"executed_at,omitempty"` // Unix timestamp of execution
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *ScriptResult) Reset() {
-	*x = ScriptResult{}
-	mi := &file_proto_metrics_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *ScriptResult) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ScriptResult) ProtoMessage() {}
-
-func (x *ScriptResult) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_metrics_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ScriptResult.ProtoReflect.Descriptor instead.
-func (*ScriptResult) Descriptor() ([]byte, []int) {
-	return file_proto_metrics_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *ScriptResult) GetScriptId() string {
-	if x != nil {
-		return x.ScriptId
-	}
-	return ""
-}
-
-func (x *ScriptResult) GetSha256Hash() string {
-	if x != nil {
-		return x.Sha256Hash
-	}
-	return ""
-}
-
-func (x *ScriptResult) GetExitCode() int32 {
-	if x != nil {
-		return x.ExitCode
-	}
-	return 0
-}
-
-func (x *ScriptResult) GetStdout() string {
-	if x != nil {
-		return x.Stdout
-	}
-	return ""
-}
-
-func (x *ScriptResult) GetStderr() string {
-	if x != nil {
-		return x.Stderr
-	}
-	return ""
-}
-
-func (x *ScriptResult) GetExecutedAt() int64 {
-	if x != nil {
-		return x.ExecutedAt
-	}
-	return 0
-}
 
 var File_proto_metrics_proto protoreflect.FileDescriptor
 
@@ -612,29 +434,13 @@ const file_proto_metrics_proto_rawDesc = "" +
 	"\x12used_storage_bytes\x18\x03 \x01(\x03R\x10usedStorageBytes\"D\n" +
 	"\x0eAcknowledgment\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
-	"\amessage\x18\x02 \x01(\tR\amessage\"\x89\x01\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"K\n" +
 	"\fAgentMessage\x120\n" +
-	"\ametrics\x18\x01 \x01(\v2\x14.metrics.HostMetricsH\x00R\ametrics\x12<\n" +
-	"\rscript_result\x18\x02 \x01(\v2\x15.metrics.ScriptResultH\x00R\fscriptResultB\t\n" +
-	"\apayload\"\x8b\x01\n" +
+	"\ametrics\x18\x01 \x01(\v2\x14.metrics.HostMetricsH\x00R\ametricsB\t\n" +
+	"\apayload\"J\n" +
 	"\x10CollectorMessage\x12+\n" +
-	"\x03ack\x18\x01 \x01(\v2\x17.metrics.AcknowledgmentH\x00R\x03ack\x12?\n" +
-	"\x0escript_command\x18\x02 \x01(\v2\x16.metrics.ScriptCommandH\x00R\rscriptCommandB\t\n" +
-	"\apayload\"g\n" +
-	"\rScriptCommand\x12\x1b\n" +
-	"\tscript_id\x18\x01 \x01(\tR\bscriptId\x12\x18\n" +
-	"\acontent\x18\x02 \x01(\tR\acontent\x12\x1f\n" +
-	"\vsha256_hash\x18\x03 \x01(\tR\n" +
-	"sha256Hash\"\xba\x01\n" +
-	"\fScriptResult\x12\x1b\n" +
-	"\tscript_id\x18\x01 \x01(\tR\bscriptId\x12\x1f\n" +
-	"\vsha256_hash\x18\x02 \x01(\tR\n" +
-	"sha256Hash\x12\x1b\n" +
-	"\texit_code\x18\x03 \x01(\x05R\bexitCode\x12\x16\n" +
-	"\x06stdout\x18\x04 \x01(\tR\x06stdout\x12\x16\n" +
-	"\x06stderr\x18\x05 \x01(\tR\x06stderr\x12\x1f\n" +
-	"\vexecuted_at\x18\x06 \x01(\x03R\n" +
-	"executedAt2Y\n" +
+	"\x03ack\x18\x01 \x01(\v2\x17.metrics.AcknowledgmentH\x00R\x03ackB\t\n" +
+	"\apayload2Y\n" +
 	"\x10MetricsCollector\x12E\n" +
 	"\rStreamMetrics\x12\x15.metrics.AgentMessage\x1a\x19.metrics.CollectorMessage(\x010\x01B$Z\"github.com/metorial/sentinel/protob\x06proto3"
 
@@ -650,7 +456,7 @@ func file_proto_metrics_proto_rawDescGZIP() []byte {
 	return file_proto_metrics_proto_rawDescData
 }
 
-var file_proto_metrics_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_proto_metrics_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_proto_metrics_proto_goTypes = []any{
 	(*HostMetrics)(nil),      // 0: metrics.HostMetrics
 	(*HostInfo)(nil),         // 1: metrics.HostInfo
@@ -658,23 +464,19 @@ var file_proto_metrics_proto_goTypes = []any{
 	(*Acknowledgment)(nil),   // 3: metrics.Acknowledgment
 	(*AgentMessage)(nil),     // 4: metrics.AgentMessage
 	(*CollectorMessage)(nil), // 5: metrics.CollectorMessage
-	(*ScriptCommand)(nil),    // 6: metrics.ScriptCommand
-	(*ScriptResult)(nil),     // 7: metrics.ScriptResult
 }
 var file_proto_metrics_proto_depIdxs = []int32{
 	1, // 0: metrics.HostMetrics.info:type_name -> metrics.HostInfo
 	2, // 1: metrics.HostMetrics.usage:type_name -> metrics.ResourceUsage
 	0, // 2: metrics.AgentMessage.metrics:type_name -> metrics.HostMetrics
-	7, // 3: metrics.AgentMessage.script_result:type_name -> metrics.ScriptResult
-	3, // 4: metrics.CollectorMessage.ack:type_name -> metrics.Acknowledgment
-	6, // 5: metrics.CollectorMessage.script_command:type_name -> metrics.ScriptCommand
-	4, // 6: metrics.MetricsCollector.StreamMetrics:input_type -> metrics.AgentMessage
-	5, // 7: metrics.MetricsCollector.StreamMetrics:output_type -> metrics.CollectorMessage
-	7, // [7:8] is the sub-list for method output_type
-	6, // [6:7] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	3, // 3: metrics.CollectorMessage.ack:type_name -> metrics.Acknowledgment
+	4, // 4: metrics.MetricsCollector.StreamMetrics:input_type -> metrics.AgentMessage
+	5, // 5: metrics.MetricsCollector.StreamMetrics:output_type -> metrics.CollectorMessage
+	5, // [5:6] is the sub-list for method output_type
+	4, // [4:5] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_proto_metrics_proto_init() }
@@ -684,11 +486,9 @@ func file_proto_metrics_proto_init() {
 	}
 	file_proto_metrics_proto_msgTypes[4].OneofWrappers = []any{
 		(*AgentMessage_Metrics)(nil),
-		(*AgentMessage_ScriptResult)(nil),
 	}
 	file_proto_metrics_proto_msgTypes[5].OneofWrappers = []any{
 		(*CollectorMessage_Ack)(nil),
-		(*CollectorMessage_ScriptCommand)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -696,7 +496,7 @@ func file_proto_metrics_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_metrics_proto_rawDesc), len(file_proto_metrics_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   6,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

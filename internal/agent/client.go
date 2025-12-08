@@ -14,7 +14,6 @@ import (
 
 type Client struct {
 	collector *MetricsCollector
-	executor  *ScriptExecutor
 	conn      *grpc.ClientConn
 	stream    pb.MetricsCollector_StreamMetricsClient
 	hostname  string
@@ -24,11 +23,6 @@ func NewClient(collectorAddr string) (*Client, error) {
 	collector, err := NewMetricsCollector()
 	if err != nil {
 		return nil, fmt.Errorf("create metrics collector: %w", err)
-	}
-
-	executor, err := NewScriptExecutor()
-	if err != nil {
-		return nil, fmt.Errorf("create script executor: %w", err)
 	}
 
 	conn, err := grpc.NewClient(collectorAddr,
@@ -48,7 +42,6 @@ func NewClient(collectorAddr string) (*Client, error) {
 
 	c := &Client{
 		collector: collector,
-		executor:  executor,
 		conn:      conn,
 		stream:    stream,
 		hostname:  collector.hostname,
@@ -113,45 +106,9 @@ func (c *Client) receiveMessages() {
 				log.Printf("Server reported error: %s", ack.Message)
 			}
 
-		case *pb.CollectorMessage_ScriptCommand:
-			cmd := payload.ScriptCommand
-			log.Printf("Received script command: %s", cmd.ScriptId)
-			go c.executeScript(cmd)
-
 		default:
 			log.Printf("Unknown message type: %T", payload)
 		}
-	}
-}
-
-func (c *Client) executeScript(cmd *pb.ScriptCommand) {
-	alreadyRun, err := c.executor.HasExecuted(cmd.Sha256Hash)
-	if err != nil {
-		log.Printf("Error checking script execution history: %v", err)
-		return
-	}
-
-	if alreadyRun {
-		log.Printf("Script %s already executed, skipping", cmd.ScriptId)
-		return
-	}
-
-	result, err := c.executor.Execute(cmd.ScriptId, cmd.Content, cmd.Sha256Hash)
-	if err != nil {
-		log.Printf("Error executing script %s: %v", cmd.ScriptId, err)
-		return
-	}
-
-	msg := &pb.AgentMessage{
-		Payload: &pb.AgentMessage_ScriptResult{
-			ScriptResult: result,
-		},
-	}
-
-	if err := c.stream.Send(msg); err != nil {
-		log.Printf("Error sending script result: %v", err)
-	} else {
-		log.Printf("Script %s executed successfully with exit code %d", cmd.ScriptId, result.ExitCode)
 	}
 }
 

@@ -39,7 +39,6 @@ message Acknowledgment {
 message AgentMessage {
   oneof payload {
     HostMetrics metrics = 1;
-    ScriptResult script_result = 2;
   }
 }
 
@@ -47,23 +46,5 @@ message AgentMessage {
 message CollectorMessage {
   oneof payload {
     Acknowledgment ack = 1;
-    ScriptCommand script_command = 2;
   }
-}
-
-// Script to be executed on agent
-message ScriptCommand {
-  string script_id = 1;        // Unique identifier for the script
-  string content = 2;          // Script content (bash/shell script)
-  string sha256_hash = 3;      // Hash for deduplication and verification
-}
-
-// Result of script execution
-message ScriptResult {
-  string script_id = 1;        // ID of the executed script
-  string sha256_hash = 2;      // Hash of the executed script
-  int32 exit_code = 3;         // Exit code from script execution
-  string stdout = 4;           // Standard output
-  string stderr = 5;           // Standard error
-  int64 executed_at = 6;       // Unix timestamp of execution
 }

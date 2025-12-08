@@ -1,21 +1,21 @@
 # Sentinel
 
-A lightweight system for collecting and querying host metrics across a distributed fleet. Includes support for remote script execution and node tagging. Think of it as a simple monitoring and management solution where agents report system metrics to a central controller that you can query via CLI or API.
+A lightweight system for collecting and querying host metrics across a distributed fleet. Think of it as a simple monitoring solution where agents report system metrics to a central controller that you can query via CLI, API, or web UI.
 
 ## Features
 
-- **Metrics Collection** - CPU, memory, disk, and network usage
-- **Script Execution** - Run bash scripts on nodes, with one-time execution guarantee
-- **Node Tagging** - Organize nodes with tags for targeted script execution
-- **HTTP API** - RESTful API for querying metrics and managing scripts
-- **Service Discovery** - Automatic commander discovery via Consul (optional)
-- **SQLite Storage** - Lightweight embedded database
+- **Metrics Collection** - CPU, memory, disk, and uptime monitoring
+- **Web Dashboard** - Interactive UI with real-time metrics and historical charts
+- **Node Tagging** - Organize nodes with tags for better fleet management
+- **HTTP API** - RESTful API for querying metrics and host information
+- **Service Discovery** - Automatic controller discovery via Consul (optional)
+- **SQLite Storage** - Lightweight embedded database with automatic cleanup
 
 ## Components
 
-**controller** - Central API server that receives metrics from agent agents and stores them in SQLite. Provides HTTP endpoints for querying host information, managing scripts, and viewing execution results.
+**controller** - Central server that receives metrics from agents and stores them in SQLite. Provides HTTP endpoints for querying host information and a web UI for visualization.
 
-**agent** - Agent that runs on each node to collect system metrics and execute scripts received from the controller.
+**agent** - Agent that runs on each node to collect and stream system metrics to the controller.
 
 **nodectl** - Command-line tool to interact with the controller API. Query health status, list hosts, view usage stats.
 
@@ -78,6 +78,17 @@ nodectl --server http://controller:8080 stats
 
 You can set `NODECTL_SERVER_URL` environment variable to avoid passing `--server` every time.
 
+## Web Dashboard
+
+Access the web UI at `http://controller:8080/` to view:
+
+- **Cluster Overview** - Total nodes, online/offline counts, average CPU usage
+- **Node List** - Real-time status of all hosts with current resource usage
+- **Historical Charts** - Click any host to view CPU, memory, and storage usage over time
+- **Auto-refresh** - Dashboard updates every 5 seconds
+
+The UI features a dark HashiCorp-inspired theme with purple accents and is embedded directly in the controller binary.
+
 ## Service Discovery with Consul
 
 Sentinel integrates with Consul for automatic service discovery and health checking.
@@ -118,15 +129,15 @@ Sentinel integrates with Consul for automatic service discovery and health check
 graph TB
   Consul[Consul<br/>Service Registry]
   Controller[Controller Server<br/>gRPC + HTTP]
-  agents[agent Agents<br/>Nodes 1..N]
+  Agents[Agents<br/>Nodes 1..N]
   CLI[nodectl CLI]
   DB[(SQLite DB)]
 
   Controller --> Consul
-  Consul --> agents
+  Consul --> Agents
 
-  agents -->|gRPC Stream| Controller
-  Controller -->|Script Commands| agents
+  Agents -->|Metrics Stream<br/>gRPC| Controller
+  Controller -->|Acknowledgments| Agents
 
   Controller <-->|R/W| DB
   CLI -->|REST API| Controller
