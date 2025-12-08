@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"time"
 
@@ -112,9 +113,29 @@ func (mc *MetricsCollector) collectUsage() (*pb.ResourceUsage, error) {
 }
 
 func getLocalIP() (string, error) {
-	info, err := host.Info()
+	// Get all network interfaces
+	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return "", err
 	}
-	return info.HostID, nil
+
+	// Find the first non-loopback IPv4 address
+	for _, addr := range addrs {
+		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+			if ipNet.IP.To4() != nil {
+				return ipNet.IP.String(), nil
+			}
+		}
+	}
+
+	// If no non-loopback address found, try connecting to a public DNS
+	// to determine the local IP that would be used for outbound connections
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		return "127.0.0.1", nil // Fallback to localhost
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+	return localAddr.IP.String(), nil
 }

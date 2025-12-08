@@ -164,9 +164,23 @@ func (db *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 }
 
 func (db *DB) GetAllHosts() ([]models.Host, error) {
-	query := `SELECT id, hostname, ip, uptime_seconds, cpu_cores, total_memory_bytes,
-	          total_storage_bytes, last_seen, online, created_at, updated_at
-	          FROM hosts ORDER BY hostname`
+	query := `
+		SELECT
+			h.id, h.hostname, h.ip, h.uptime_seconds, h.cpu_cores,
+			h.total_memory_bytes, h.total_storage_bytes, h.last_seen,
+			h.online, h.created_at, h.updated_at,
+			u.cpu_percent, u.used_memory_bytes, u.used_storage_bytes
+		FROM hosts h
+		LEFT JOIN (
+			SELECT
+				host_id,
+				cpu_percent,
+				used_memory_bytes,
+				used_storage_bytes,
+				ROW_NUMBER() OVER (PARTITION BY host_id ORDER BY timestamp DESC) as rn
+			FROM host_usage
+		) u ON h.id = u.host_id AND u.rn = 1
+		ORDER BY h.hostname`
 
 	rows, err := db.conn.Query(query)
 	if err != nil {
@@ -177,12 +191,31 @@ func (db *DB) GetAllHosts() ([]models.Host, error) {
 	var hosts []models.Host
 	for rows.Next() {
 		var h models.Host
-		err := rows.Scan(&h.ID, &h.Hostname, &h.IP, &h.UptimeSeconds, &h.CPUCores,
+		var cpuPercent sql.NullFloat64
+		var usedMemory sql.NullInt64
+		var usedStorage sql.NullInt64
+
+		err := rows.Scan(
+			&h.ID, &h.Hostname, &h.IP, &h.UptimeSeconds, &h.CPUCores,
 			&h.TotalMemoryBytes, &h.TotalStorageBytes, &h.LastSeen, &h.Online,
-			&h.CreatedAt, &h.UpdatedAt)
+			&h.CreatedAt, &h.UpdatedAt,
+			&cpuPercent, &usedMemory, &usedStorage,
+		)
 		if err != nil {
 			return nil, err
 		}
+
+		// Populate optional usage fields if available
+		if cpuPercent.Valid {
+			h.CPUPercent = &cpuPercent.Float64
+		}
+		if usedMemory.Valid {
+			h.UsedMemoryBytes = &usedMemory.Int64
+		}
+		if usedStorage.Valid {
+			h.UsedStorageBytes = &usedStorage.Int64
+		}
+
 		hosts = append(hosts, h)
 	}
 

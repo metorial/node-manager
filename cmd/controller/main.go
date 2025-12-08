@@ -35,7 +35,7 @@ func main() {
 }
 
 func run() error {
-	port := getEnv("PORT", defaultPort)
+	port := getEnv("GRPC_PORT", defaultPort)
 	httpPort := getEnv("HTTP_PORT", defaultHTTPPort)
 	dbPath := getEnv("DB_PATH", defaultDBPath)
 

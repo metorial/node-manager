@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinel Controller</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -136,6 +137,70 @@
 
         tbody tr:hover {
             background: #2d2d2d;
+            cursor: pointer;
+        }
+
+        tbody tr.selected {
+            background: #2d2d2d;
+            border-left: 3px solid #7b42bc;
+        }
+
+        .charts-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .charts-section.visible {
+            display: block;
+        }
+
+        .charts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close-charts {
+            color: #999;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 8px 16px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #262626;
+        }
+
+        .close-charts:hover {
+            background: #2d2d2d;
+            color: #7b42bc;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: #262626;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 20px;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
         }
 
         .status-badge {
@@ -247,6 +312,34 @@
                 <div class="loading pulse">Loading nodes...</div>
             </div>
         </div>
+
+        <div class="section charts-section" id="charts-section">
+            <div class="charts-header">
+                <h2 id="charts-title">Resource History</h2>
+                <button class="close-charts" id="close-charts">Close</button>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">CPU Usage</div>
+                    <div class="chart-container">
+                        <canvas id="cpu-chart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Memory Usage</div>
+                    <div class="chart-container">
+                        <canvas id="memory-chart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">Storage Usage</div>
+                    <div class="chart-container">
+                        <canvas id="storage-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -343,6 +436,7 @@
                         <thead>
                             <tr>
                                 <th>Hostname</th>
+                                <th>Host ID</th>
                                 <th>Status</th>
                                 <th>IP Address</th>
                                 <th>CPU Usage</th>
@@ -354,8 +448,9 @@
                         </thead>
                         <tbody>
                             ${sortedHosts.map(host => `
-                                <tr>
+                                <tr class="host-row" data-hostname="${host.hostname}" onclick="selectHost('${host.hostname}')">
                                     <td><span class="hostname">${host.hostname || 'Unknown'}</span></td>
+                                    <td class="metric">${host.id || '-'}</td>
                                     <td>
                                         <span class="status-badge ${host.online ? 'online' : 'offline'}">
                                             ${host.online ? 'Online' : 'Offline'}
@@ -363,15 +458,15 @@
                                     </td>
                                     <td class="metric">${host.ip || '-'}</td>
                                     <td class="metric">
-                                        ${host.cpu_percent !== undefined ? host.cpu_percent.toFixed(1) + '%' : '-'}
+                                        ${host.cpu_percent !== undefined && host.cpu_percent !== null ? host.cpu_percent.toFixed(1) + '%' : '-'}
                                         <br><span class="metric-label">${host.cpu_cores || 0} cores</span>
                                     </td>
                                     <td class="metric">
-                                        ${host.used_memory_bytes ? formatBytes(host.used_memory_bytes) : '-'}
+                                        ${host.used_memory_bytes !== undefined && host.used_memory_bytes !== null ? formatBytes(host.used_memory_bytes) : '-'}
                                         <br><span class="metric-label">of ${formatBytes(host.total_memory_bytes || 0)}</span>
                                     </td>
                                     <td class="metric">
-                                        ${host.used_storage_bytes ? formatBytes(host.used_storage_bytes) : '-'}
+                                        ${host.used_storage_bytes !== undefined && host.used_storage_bytes !== null ? formatBytes(host.used_storage_bytes) : '-'}
                                         <br><span class="metric-label">of ${formatBytes(host.total_storage_bytes || 0)}</span>
                                     </td>
                                     <td class="metric">${formatUptime(host.uptime_seconds)}</td>
@@ -396,6 +491,214 @@
         async function refreshData() {
             await Promise.all([fetchStats(), fetchNodes()]);
         }
+
+        // Charts functionality
+        let cpuChart = null;
+        let memoryChart = null;
+        let storageChart = null;
+        let selectedHostname = null;
+
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: '#333'
+                    },
+                    ticks: {
+                        color: '#999'
+                    }
+                },
+                y: {
+                    grid: {
+                        color: '#333'
+                    },
+                    ticks: {
+                        color: '#999'
+                    }
+                }
+            }
+        };
+
+        async function selectHost(hostname) {
+            selectedHostname = hostname;
+
+            // Update selected row styling
+            document.querySelectorAll('.host-row').forEach(row => {
+                row.classList.remove('selected');
+            });
+            document.querySelector(`[data-hostname="${hostname}"]`).classList.add('selected');
+
+            // Fetch and display history
+            await fetchHostHistory(hostname);
+
+            // Show charts section and scroll to it
+            const chartsSection = document.getElementById('charts-section');
+            chartsSection.classList.add('visible');
+            chartsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        async function fetchHostHistory(hostname) {
+            try {
+                const response = await fetch(`${API_BASE}/hosts/${hostname}?limit=100`);
+                if (!response.ok) throw new Error('Failed to fetch host history');
+                const data = await response.json();
+
+                document.getElementById('charts-title').textContent = `Resource History - ${hostname}`;
+
+                if (!data.usage || data.usage.length === 0) {
+                    // Show message if no historical data
+                    return;
+                }
+
+                // Sort by timestamp ascending
+                const usage = data.usage.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+                updateCharts(usage, data.host);
+            } catch (error) {
+                console.error('Error fetching host history:', error);
+            }
+        }
+
+        function updateCharts(usage, host) {
+            const labels = usage.map(u => {
+                const date = new Date(u.timestamp);
+                return date.toLocaleTimeString();
+            });
+
+            // CPU Chart
+            const cpuData = usage.map(u => u.cpu_percent);
+            if (cpuChart) {
+                cpuChart.destroy();
+            }
+            const cpuCtx = document.getElementById('cpu-chart').getContext('2d');
+            cpuChart = new Chart(cpuCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'CPU %',
+                        data: cpuData,
+                        borderColor: '#7b42bc',
+                        backgroundColor: 'rgba(123, 66, 188, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                ...chartOptions.scales.y.ticks,
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Memory Chart
+            const memoryData = usage.map(u => (u.used_memory_bytes / 1024 / 1024 / 1024).toFixed(2));
+            const totalMemoryGB = (host.total_memory_bytes / 1024 / 1024 / 1024).toFixed(2);
+            if (memoryChart) {
+                memoryChart.destroy();
+            }
+            const memoryCtx = document.getElementById('memory-chart').getContext('2d');
+            memoryChart = new Chart(memoryCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Memory GB',
+                        data: memoryData,
+                        borderColor: '#7b42bc',
+                        backgroundColor: 'rgba(123, 66, 188, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            min: 0,
+                            max: Math.ceil(totalMemoryGB),
+                            ticks: {
+                                ...chartOptions.scales.y.ticks,
+                                callback: function(value) {
+                                    return value + ' GB';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Storage Chart
+            const storageData = usage.map(u => (u.used_storage_bytes / 1024 / 1024 / 1024).toFixed(2));
+            const totalStorageGB = (host.total_storage_bytes / 1024 / 1024 / 1024).toFixed(2);
+            if (storageChart) {
+                storageChart.destroy();
+            }
+            const storageCtx = document.getElementById('storage-chart').getContext('2d');
+            storageChart = new Chart(storageCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Storage GB',
+                        data: storageData,
+                        borderColor: '#7b42bc',
+                        backgroundColor: 'rgba(123, 66, 188, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            min: 0,
+                            max: Math.ceil(totalStorageGB),
+                            ticks: {
+                                ...chartOptions.scales.y.ticks,
+                                callback: function(value) {
+                                    return value + ' GB';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function closeCharts() {
+            document.getElementById('charts-section').classList.remove('visible');
+            document.querySelectorAll('.host-row').forEach(row => {
+                row.classList.remove('selected');
+            });
+            selectedHostname = null;
+        }
+
+        // Close button handler
+        document.getElementById('close-charts').addEventListener('click', closeCharts);
 
         // Initial load
         refreshData();
