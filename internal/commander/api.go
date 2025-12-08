@@ -3,9 +3,11 @@ package commander
 import (
 	"crypto/sha256"
 	"database/sql"
+	"embed"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,6 +16,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/metorial/sentinel/internal/models"
 )
+
+//go:embed web/static/*
+var staticFiles embed.FS
 
 type API struct {
 	db     *DB
@@ -32,6 +37,7 @@ func (api *API) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/v1/scripts", api.handleScripts)
 	mux.HandleFunc("/api/v1/scripts/", api.handleScript)
 	mux.HandleFunc("/api/v1/tags", api.handleTags)
+	mux.HandleFunc("/", api.handleUI)
 }
 
 func (api *API) handleHosts(w http.ResponseWriter, r *http.Request) {
@@ -343,4 +349,27 @@ func (api *API) handleHostTags(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+func (api *API) handleUI(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	content, err := fs.ReadFile(staticFiles, "web/static/index.html")
+	if err != nil {
+		log.Printf("Error reading embedded file: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(content)
 }
